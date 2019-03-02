@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,16 +26,39 @@ namespace WordFinder
 
         AllSentences allSentences = new AllSentences(); // Stores all sentences (l to r, r to l, t to b and b to t)
 
+        HashSet<string> allEnglishWords = new HashSet<string>();
+
+        Thread readerThread;
+
+        List<string> foundWords = new List<string>();
+
+        Semaphore sem = new Semaphore(0, 1);
+
         public MainWindow()
         {
             InitializeComponent();
 
             InitEverything();
+
+            readerThread.Start();
         }
 
         private void InitEverything()
         {
             enteredWords = new List<string>();
+
+            readerThread = new Thread(ReadAllWords);
+
+        }
+
+        private void ReadAllWords()
+        {
+            string[] engWordCollection = File.ReadAllLines("C:\\Words.txt");
+
+            foreach(string word in engWordCollection)
+            {
+                allEnglishWords.Add(word);
+            }
         }
 
         private void textBox_wordInput_KeyDown(object sender, KeyEventArgs e)
@@ -50,7 +75,56 @@ namespace WordFinder
 
         private void button_StartSearch_Click(object sender, RoutedEventArgs e)
         {
+            while(readerThread.IsAlive == true)
+            {
+                Thread.Sleep(100);
+            }
+
             CreateAllSentences();
+
+            StartSearching();
+        }
+
+        private void StartSearching()
+        {
+            Thread leftToRightThread = new Thread(new ParameterizedThreadStart(SearchForWords));
+            Thread rightToLeftThread = new Thread(new ParameterizedThreadStart(SearchForWords));
+            Thread topToBottomThread = new Thread(new ParameterizedThreadStart(SearchForWords));
+            Thread bottomToTopThread = new Thread(new ParameterizedThreadStart(SearchForWords));
+
+            leftToRightThread.Start(allSentences.leftToRight);
+            rightToLeftThread.Start(allSentences.rightToLeft);
+            topToBottomThread.Start(allSentences.topToBottom);
+            bottomToTopThread.Start(allSentences.bottomToTop);
+
+            leftToRightThread.Join();
+            rightToLeftThread.Join();
+            topToBottomThread.Join();
+            bottomToTopThread.Join();
+
+        }
+
+        void SearchForWords(object obj)
+        {
+            List<string> listOfSentences = (List<string>)obj;
+
+            foreach(string sentence in listOfSentences)
+            {
+                Console.WriteLine(sentence);
+            }
+
+            Console.WriteLine("-------------");
+        }
+
+        
+
+        private void AddFoundString(string word)
+        {
+            sem.WaitOne();
+
+            foundWords.Add(word);
+
+            sem.Release();
         }
 
         private void CreateAllSentences()
@@ -83,6 +157,15 @@ namespace WordFinder
             }
 
             allSentences.PrintAllSentences();
+        }
+
+
+        bool IsItAWord(string str)
+        {
+            if (allEnglishWords.Contains(str))
+                return true;
+
+            return false;
         }
     }
 }
