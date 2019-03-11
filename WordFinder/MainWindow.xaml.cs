@@ -298,5 +298,21 @@ namespace WordFinder
 
             sChosenFile = openFileDialog.FileName;
         }
+
+        private void button_CopyResToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+            string allResults = "";
+
+            foreach (var item in listBox_output.Items)
+            {
+                if (allResults != null)
+                    allResults += "\n";
+
+                allResults += item.ToString();
+            }
+
+            if (allResults != null)
+                Clipboard.SetText(allResults);
+        }
     }
 }
