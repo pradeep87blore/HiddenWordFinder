@@ -30,9 +30,12 @@ namespace WordFinder
 
         Thread readerThread;
 
-        List<string> foundWords = new List<string>();
+        static int searchThreadCounter = 0;
+        List<FoundWordAttributes> foundWords = new List<FoundWordAttributes>();
 
         Semaphore sem = new Semaphore(0, 1);
+
+        int minWordLength = 3;
 
         public MainWindow()
         {
@@ -51,13 +54,15 @@ namespace WordFinder
 
         }
 
+        // This function reads all the words in english from the text file at C:\Words.txt
+        // TODO: Need to make this more dynamic
         private void ReadAllWords()
         {
             string[] engWordCollection = File.ReadAllLines("C:\\Words.txt");
 
             foreach(string word in engWordCollection)
             {
-                allEnglishWords.Add(word);
+                allEnglishWords.Add(word.ToLower());
             }
         }
 
@@ -75,13 +80,17 @@ namespace WordFinder
 
         private void button_StartSearch_Click(object sender, RoutedEventArgs e)
         {
+            // If the thread reading the english words is still not yet done, wait for it to complete
             while(readerThread.IsAlive == true)
             {
                 Thread.Sleep(100);
             }
 
+            // Create all the sentences (left to right, right to left, top to bottom and bottom to top)
             CreateAllSentences();
 
+            minWordLength = Int32.Parse(textBox_minWordLength.Text);
+            // Start the search operation
             StartSearching();
         }
 
@@ -92,39 +101,118 @@ namespace WordFinder
             Thread topToBottomThread = new Thread(new ParameterizedThreadStart(SearchForWords));
             Thread bottomToTopThread = new Thread(new ParameterizedThreadStart(SearchForWords));
 
-            leftToRightThread.Start(allSentences.leftToRight);
-            rightToLeftThread.Start(allSentences.rightToLeft);
-            topToBottomThread.Start(allSentences.topToBottom);
-            bottomToTopThread.Start(allSentences.bottomToTop);
+            leftToRightThread.Start(new SentenceAttributes(allSentences.leftToRight, SentenceAttributes.Direction.LeftToRight));
+            searchThreadCounter++;
+            rightToLeftThread.Start(new SentenceAttributes(allSentences.rightToLeft, SentenceAttributes.Direction.RightToLeft));
+            searchThreadCounter++;
+            topToBottomThread.Start(new SentenceAttributes(allSentences.topToBottom, SentenceAttributes.Direction.TopToBottom));
+            searchThreadCounter++;
+            bottomToTopThread.Start(new SentenceAttributes(allSentences.bottomToTop, SentenceAttributes.Direction.BottomToTop));
+            searchThreadCounter++;
+            
+            while (searchThreadCounter != 0)
+            {
+                Thread.Sleep(100); // Sleep this thread for 100ms and check again
+            }
 
-            leftToRightThread.Join();
-            rightToLeftThread.Join();
-            topToBottomThread.Join();
-            bottomToTopThread.Join();
+            DoneWithSearch();
+        }
 
+        Action onCompleted = () =>
+        {
+            searchThreadCounter--;
+        };
+
+        private void DoneWithSearch()
+        {
+            foreach (var found in foundWords)
+            {
+                listBox_output.Items.Add(string.Format("{0} found starting from row {1}, col {2} to row {3}, col {4}", found.word, 
+                    found.startRow, found.startColumn,
+                    found.endRow, found.endColumn));
+            }
         }
 
         void SearchForWords(object obj)
         {
-            List<string> listOfSentences = (List<string>)obj;
-
-            foreach(string sentence in listOfSentences)
+            try
             {
-                Console.WriteLine(sentence);
+                SentenceAttributes sAttr = (SentenceAttributes)obj;
+                List<string> listOfSentences = (List<string>)sAttr.sentence;
+
+
+                Console.WriteLine(string.Format("-----{0}------", sAttr.direction));
+                for (int iSentences = 0; iSentences < listOfSentences.Count; iSentences++)
+                //foreach (string sentence in listOfSentences)
+                {
+                    // Iterate over the sentence. Start with the largest word, decrement the word size from the right as you go and thus reach till the end
+                    // Next, start from the second letter and proceed till the end. Continue till the first and last letters of the word are the last letter
+                    //Console.WriteLine(sentence);
+
+                    string sentence = listOfSentences[iSentences];
+                    for (int iStartLetter = 0; iStartLetter < sentence.Length; iStartLetter++)
+                    {
+                        for (int iLastLetter = sentence.Length; iLastLetter >= iStartLetter; iLastLetter--)
+                        {
+                            if ((iLastLetter - iStartLetter) < minWordLength)
+                                continue; // Dont search for words smaller than the specified minimum size
+
+                            string tempString = sentence.Substring(iStartLetter, iLastLetter - iStartLetter);
+                            //Console.WriteLine(tempString);
+
+
+                            if (IsItAWord(tempString))
+                            {
+                                int iStartRow = iStartLetter, iStartCol = iSentences, iEndRow = 0, iEndCol = 0;
+
+                                if (sAttr.direction == SentenceAttributes.Direction.LeftToRight)
+                                {
+                                    iEndRow = tempString.Length - iStartLetter;
+                                    iEndCol = iSentences; // Same as the start col since this is a horizonatal scan
+                                }
+                                else if (sAttr.direction == SentenceAttributes.Direction.RightToLeft)
+                                {
+                                    iEndRow = iStartLetter - tempString.Length;
+                                    iEndCol = iSentences; // Same as the start col since this is a horizonatal scan
+                                }
+                                else if (sAttr.direction == SentenceAttributes.Direction.TopToBottom)
+                                {
+
+                                }
+                                else
+                                {
+
+                                }
+                                //Console.WriteLine(tempString);
+                                AddFoundString(new FoundWordAttributes(tempString, iStartRow, iStartCol, iEndRow, iEndCol));
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
 
-            Console.WriteLine("-------------");
+            finally
+            {
+                Console.WriteLine("-------------");
+
+                onCompleted();
+            }
         }
 
         
 
-        private void AddFoundString(string word)
+        private void AddFoundString(FoundWordAttributes foundWord)
         {
-            sem.WaitOne();
+            //sem.WaitOne();
 
-            foundWords.Add(word);
+            foundWords.Add(foundWord);
 
-            sem.Release();
+            //sem.Release();
         }
 
         private void CreateAllSentences()
@@ -156,12 +244,13 @@ namespace WordFinder
                 allSentences.bottomToTop.Add(bottomToTopStr);
             }
 
-            allSentences.PrintAllSentences();
+            // allSentences.PrintAllSentences(); // Debug
         }
 
 
         bool IsItAWord(string str)
         {
+            //Console.WriteLine(str);
             if (allEnglishWords.Contains(str))
                 return true;
 
