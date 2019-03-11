@@ -125,10 +125,10 @@ namespace WordFinder
             searchThreadCounter++;
             rightToLeftThread.Start(new SentenceAttributes(allSentences.rightToLeft, SentenceAttributes.Direction.RightToLeft));
             searchThreadCounter++;
-            //topToBottomThread.Start(new SentenceAttributes(allSentences.topToBottom, SentenceAttributes.Direction.TopToBottom));
-            //searchThreadCounter++;
-            //bottomToTopThread.Start(new SentenceAttributes(allSentences.bottomToTop, SentenceAttributes.Direction.BottomToTop));
-            //searchThreadCounter++;
+            topToBottomThread.Start(new SentenceAttributes(allSentences.topToBottom, SentenceAttributes.Direction.TopToBottom));
+            searchThreadCounter++;
+            bottomToTopThread.Start(new SentenceAttributes(allSentences.bottomToTop, SentenceAttributes.Direction.BottomToTop));
+            searchThreadCounter++;
 
             while (searchThreadCounter != 0)
             {
