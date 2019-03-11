@@ -7,13 +7,15 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="991.597">
     <Grid>
-        <TextBox x:Name="textBox_wordInput" HorizontalAlignment="Left" Height="22" Margin="47,48,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="533" KeyDown="textBox_wordInput_KeyDown"/>
+        <TextBox x:Name="textBox_wordInput" HorizontalAlignment="Left" Height="22" Margin="47,76,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="533" KeyDown="textBox_wordInput_KeyDown"/>
         <ListBox x:Name="listBox_wordList" HorizontalAlignment="Left" Height="254" Margin="47,109,0,0" VerticalAlignment="Top" Width="533"/>
         <ListBox x:Name="listBox_output" HorizontalAlignment="Left" Height="336" Margin="624,48,0,0" VerticalAlignment="Top" Width="306"/>
-        <Label x:Name="label" Content="Enter the word here and press enter:" HorizontalAlignment="Left" Height="25" Margin="44,18,0,0" VerticalAlignment="Top" Width="292"/>
+        <Label x:Name="label_enterTextOrChooseFile" Content="Enter the word here and press enter:" HorizontalAlignment="Left" Height="25" Margin="44,46,0,0" VerticalAlignment="Top" Width="292"/>
         <Button x:Name="button_StartSearch" Content="Search" HorizontalAlignment="Left" Height="25" Margin="503,367,0,0" VerticalAlignment="Top" Width="77" Click="button_StartSearch_Click"/>
         <TextBox x:Name="textBox_minWordLength" HorizontalAlignment="Left" Height="23" Margin="367,370,0,0" TextWrapping="Wrap" Text="3" VerticalAlignment="Top" Width="115"/>
         <Label x:Name="label_Copy" Content="Minimum word length:" HorizontalAlignment="Left" Height="25" Margin="47,368,0,0" VerticalAlignment="Top" Width="305"/>
+        <RadioButton x:Name="radioButton_enterText" Content="Enter Text" HorizontalAlignment="Left" Height="21" Margin="47,20,0,0" VerticalAlignment="Top" Width="114" Checked="radioButton_enterText_Checked"/>
+        <RadioButton x:Name="radioButton_ChooseFile" Content="Choose File" HorizontalAlignment="Left" Height="21" Margin="196,20,0,0" VerticalAlignment="Top" Width="114" Checked="radioButton_ChooseFile_Checked"/>
 
     </Grid>
 </Window>

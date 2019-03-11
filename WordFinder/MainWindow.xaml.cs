@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,11 @@ namespace WordFinder
 
         int minWordLength = 3;
 
+        string sChosenFile = "";
+
+        private const string ENTER_WORDS = "Enter the word here and press enter:";
+        private const string CHOOSE_FILE = "The following is the file you have chosen. Press enter to continue:";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -51,6 +57,8 @@ namespace WordFinder
             enteredWords = new List<string>();
 
             readerThread = new Thread(ReadAllWords);
+
+            radioButton_enterText.IsChecked = true;
 
         }
 
@@ -70,11 +78,23 @@ namespace WordFinder
         {
             if(e.Key == Key.Enter)
             {
-                var word = textBox_wordInput.Text;
-                listBox_wordList.Items.Add(word.ToLower()); /// store all lower case letters only
-                textBox_wordInput.Text = "";
+                if (radioButton_enterText.IsChecked == true)
+                {
+                    var word = textBox_wordInput.Text;
+                    listBox_wordList.Items.Add(word.ToLower()); /// store all lower case letters only
+                    textBox_wordInput.Text = "";
 
-                enteredWords.Add(word.ToLower());
+                    enteredWords.Add(word.ToLower());
+                }
+                else
+                {
+                    var words = File.ReadAllLines(sChosenFile);
+                    foreach (var word in words)
+                    {
+                        listBox_wordList.Items.Add(word.ToLower()); /// store all lower case letters only
+                        enteredWords.Add(word.ToLower());
+                    }
+                }
             }
         }
 
@@ -127,6 +147,8 @@ namespace WordFinder
         {
             foreach (var found in foundWords)
             {
+                if (found == null)
+                    continue;
                 listBox_output.Items.Add(string.Format("{0} found starting from row {1}, col {2} to row {3}, col {4}", found.word, 
                     found.startRow, found.startColumn,
                     found.endRow, found.endColumn));
@@ -255,6 +277,26 @@ namespace WordFinder
                 return true;
 
             return false;
+        }
+               
+
+        private void radioButton_enterText_Checked(object sender, RoutedEventArgs e)
+        {
+            radioButton_ChooseFile.IsChecked = false;
+            label_enterTextOrChooseFile.Content = ENTER_WORDS;
+        }
+
+        private void radioButton_ChooseFile_Checked(object sender, RoutedEventArgs e)
+        {
+            radioButton_enterText.IsChecked = false;
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            if (openFileDialog.ShowDialog() == true)
+                textBox_wordInput.Text = openFileDialog.FileName;
+
+            label_enterTextOrChooseFile.Content = CHOOSE_FILE;
+
+            sChosenFile = openFileDialog.FileName;
         }
     }
 }
