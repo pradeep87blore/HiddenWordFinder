@@ -125,11 +125,11 @@ namespace WordFinder
             searchThreadCounter++;
             rightToLeftThread.Start(new SentenceAttributes(allSentences.rightToLeft, SentenceAttributes.Direction.RightToLeft));
             searchThreadCounter++;
-            topToBottomThread.Start(new SentenceAttributes(allSentences.topToBottom, SentenceAttributes.Direction.TopToBottom));
-            searchThreadCounter++;
-            bottomToTopThread.Start(new SentenceAttributes(allSentences.bottomToTop, SentenceAttributes.Direction.BottomToTop));
-            searchThreadCounter++;
-            
+            //topToBottomThread.Start(new SentenceAttributes(allSentences.topToBottom, SentenceAttributes.Direction.TopToBottom));
+            //searchThreadCounter++;
+            //bottomToTopThread.Start(new SentenceAttributes(allSentences.bottomToTop, SentenceAttributes.Direction.BottomToTop));
+            //searchThreadCounter++;
+
             while (searchThreadCounter != 0)
             {
                 Thread.Sleep(100); // Sleep this thread for 100ms and check again
@@ -164,8 +164,8 @@ namespace WordFinder
 
 
                 Console.WriteLine(string.Format("-----{0}------", sAttr.direction));
+                // List of sentences act as the columns, the words in each represent the rows
                 for (int iSentences = 0; iSentences < listOfSentences.Count; iSentences++)
-                //foreach (string sentence in listOfSentences)
                 {
                     // Iterate over the sentence. Start with the largest word, decrement the word size from the right as you go and thus reach till the end
                     // Next, start from the second letter and proceed till the end. Continue till the first and last letters of the word are the last letter
@@ -180,26 +180,25 @@ namespace WordFinder
                                 continue; // Dont search for words smaller than the specified minimum size
 
                             string tempString = sentence.Substring(iStartLetter, iLastLetter - iStartLetter);
-                            //Console.WriteLine(tempString);
 
-
-                            if (IsItAWord(tempString))
+                            if (IsItAWord(tempString)) // Check if this is a word or not
                             {
-                                int iStartRow = iStartLetter, iStartCol = iSentences, iEndRow = 0, iEndCol = 0;
+                                int iStartRow = iSentences, iStartCol = iStartLetter, iEndRow = 0, iEndCol = 0;
 
                                 if (sAttr.direction == SentenceAttributes.Direction.LeftToRight)
                                 {
-                                    iEndRow = tempString.Length - iStartLetter;
-                                    iEndCol = iSentences; // Same as the start col since this is a horizonatal scan
+                                    iEndRow = iStartRow; // Since this is a horizontal scan, the rows will be same.
+                                    // Column calc: E.g., if the word FUTURE starts at column 2 (i.e., 3rd column), the end will be (length = 6) + 2 - 1 = 7 (-1 because col. 2 is already used)
+                                    iEndCol = tempString.Length + iStartLetter - 1; 
                                 }
                                 else if (sAttr.direction == SentenceAttributes.Direction.RightToLeft)
                                 {
-                                    iEndRow = iStartLetter - tempString.Length;
-                                    iEndCol = iSentences; // Same as the start col since this is a horizonatal scan
+                                    iEndRow = iStartRow; // Same as the start row since this is a horizonatal scan
+                                    iEndCol = iStartLetter - tempString.Length + 1; 
                                 }
                                 else if (sAttr.direction == SentenceAttributes.Direction.TopToBottom)
                                 {
-
+                                    
                                 }
                                 else
                                 {

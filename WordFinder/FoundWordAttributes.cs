@@ -12,7 +12,7 @@ namespace WordFinder
         public int startRow = -1, endRow = -1;
         public int startColumn = -1, endColumn = -1; 
         
-        public FoundWordAttributes(string foundWord, int sRow, int eRow, int sCol, int eCol)
+        public FoundWordAttributes(string foundWord, int sRow, int sCol, int eRow, int eCol)
         {
             word = foundWord;
             startRow = sRow;
